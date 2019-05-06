@@ -1,0 +1,10 @@
+Name: Silactions [Beta]
+Package: com.ps.silactions
+Maintainer: PoomSmart
+Author: PoomSmart
+Depends: firmware (>= 11.0), mobilesubstrate, org.coolstar.sileo
+Section: Tweaks
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Manage packages in Sileo easier.
+Depiction: https://poomsmart.github.io/repo/depictions/silactions.html
