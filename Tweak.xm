@@ -1,11 +1,10 @@
 #import "Header.h"
 #import <UIKit/UIAlertController+Private.h>
-#import <UIKit/UIColor+Private.h>
 #import <substrate.h>
 
 void viewDidLoadHook(id self) {
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(didLongPressPackage:)];
-    gesture.minimumPressDuration = 0.35;
+    gesture.minimumPressDuration = 0.45;
     gesture.delegate = (id <UIGestureRecognizerDelegate>)self;
     gesture.delaysTouchesBegan = YES;
     [[self collectionView] addGestureRecognizer:gesture];
