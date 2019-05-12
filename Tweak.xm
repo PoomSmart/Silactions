@@ -19,18 +19,6 @@ BOOL shouldReceiveTouchHook(BOOL orig, UIGestureRecognizer *gesture) {
     return orig;
 }
 
-Package *findPackageInRepo(Package *fpackage) {
-    NSString *fpackageString = [fpackage.package lowercaseString];
-    for (Repo *repo in [[NSClassFromString(@"RepoManager") sharedInstance] repoList]) {
-        for (Package *package in repo.packages) {
-            if ([fpackageString isEqualToString:[package.package lowercaseString]]) {
-                return package;
-            }
-        }
-    }
-    return nil;
-}
-
 void didLongPressGesture(UILongPressGestureRecognizer *gesture, UIViewController <SileoPackageListViewControllerDelegate> *self) {
     if (gesture.state == UIGestureRecognizerStateChanged)
         return;
@@ -49,37 +37,44 @@ void didLongPressGesture(UILongPressGestureRecognizer *gesture, UIViewController
         [oldButton release];
         if (gesture.state != UIGestureRecognizerStateEnded)
             return;
-        Package *package = findPackageInRepo(cell.targetPackage);
+        Package *package = cell.targetPackage;
         PackageQueueButton *button = [NSClassFromString(@"PackageQueueButton") new];
-        button.package = cell.targetPackage;
+        button.package = package;
         button.shouldCheckPurchaseStatus = NO;
-        if (package) {
-            [cell.targetPackage release];
-            cell.targetPackage = package;
-            button.package = package;
-        }
         button.frame = CGRectMake(cell.frame.size.width / 2, cell.frame.size.height / 2, 1, 1);
         button.tag = 2222;
-        [cell addSubview:button];
         button.hidden = YES;
-        UIAlertController *actions = [UIAlertController alertControllerWithTitle:button.package.name message:[NSString stringWithFormat:@"Version: %@\nAuthor(s): %@", button.package.version, button.package.author] preferredStyle:UIAlertControllerStyleActionSheet];
-        if (IS_IPAD)
-            actions.popoverPresentationController.sourceView = button;
+        button.userInteractionEnabled = NO;
+        [cell addSubview:button];
+        UIAlertController *actions = [UIAlertController alertControllerWithTitle:package.name message:[NSString stringWithFormat:@"Version: %@\nAuthor(s): %@", package.version, package.author] preferredStyle:UIAlertControllerStyleActionSheet];
+        if (IS_IPAD) {
+            actions.popoverPresentationController.sourceView = cell;
+            actions.popoverPresentationController.sourceRect = cell.bounds;
+        }
         button.viewControllerForPresentation = self;
-        BOOL commercial = button.package.commercial;
-        button.package.commercial = NO;
-        // BOOL installed = [[NSClassFromString(@"PackageListManager") sharedInstance] installedPackageWithIdentifier:button.package.package] != nil;
+        BOOL commercial = package.commercial;
+        package.commercial = NO;
+        // BOOL installed = [[NSClassFromString(@"PackageListManager") sharedInstance] installedPackageWithIdentifier:package.package] != nil;
         for (UIPreviewAction *previewAction in button.previewActionItems) {
             [actions _addActionWithTitle:previewAction.title style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                 if (previewAction.handler)
                     previewAction.handler(previewAction, actions);
             }];
         }
-        UIAlertAction *cancel = [UIAlertAction actionWithTitle:[NSBundle.mainBundle localizedStringForKey:@"Cancel" value:@"" table:nil] style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
-            [actions dismissViewControllerAnimated:YES completion:NULL];
-        }];
-        [actions addAction:cancel];
-        button.package.commercial = commercial;
+        if (package.allVersions.count > 1) {
+            [actions _addActionWithTitle:[NSBundle.mainBundle localizedStringForKey:@"Select Version" value:@"" table:nil] style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                BOOL commercial = package.commercial;
+                package.commercial = NO;
+                [button showDowngradePrompt:nil];
+                package.commercial = commercial;
+            }];
+        }
+        if (!IS_IPAD) {
+            [actions _addActionWithTitle:[NSBundle.mainBundle localizedStringForKey:@"Cancel" value:@"" table:nil] style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+                [actions dismissViewControllerAnimated:YES completion:NULL];
+            }];
+        }
+        package.commercial = commercial;
         [button.viewControllerForPresentation presentViewController:actions animated:YES completion:NULL];   
     }
 }
@@ -149,7 +144,7 @@ NSString *keys[] = {
     self.trueReturnButtonAction = trueReturnButtonAction;
     NSString *trueAction = nil;
     if (trueReturnButtonAction > 1) {
-        NSString *key = keys[trueReturnButtonAction] ?: keys[trueReturnButtonAction + 1];
+        NSString *key = keys[trueReturnButtonAction] ?: keys[trueReturnButtonAction - 1];
         trueAction = [NSBundle.mainBundle localizedStringForKey:key value:@"" table:nil];
         MSHookIvar<int>(self, "_returnButtonAction") = 0;
     }
