@@ -19,6 +19,18 @@ BOOL shouldReceiveTouchHook(BOOL orig, UIGestureRecognizer *gesture) {
     return orig;
 }
 
+Package *findPackageInRepo(Package *fpackage) {
+    NSString *fpackageString = [fpackage.package lowercaseString];
+    for (Repo *repo in [[NSClassFromString(@"RepoManager") sharedInstance] repoList]) {
+        for (Package *package in repo.packages) {
+            if ([fpackageString isEqualToString:[package.package lowercaseString]]) {
+                return package;
+            }
+        }
+    }
+    return nil;
+}
+
 void didLongPressGesture(UILongPressGestureRecognizer *gesture, UIViewController <SileoPackageListViewControllerDelegate> *self) {
     if (gesture.state == UIGestureRecognizerStateChanged)
         return;
@@ -37,6 +49,9 @@ void didLongPressGesture(UILongPressGestureRecognizer *gesture, UIViewController
         [oldButton release];
         if (gesture.state != UIGestureRecognizerStateEnded)
             return;
+        Package *newPackage = findPackageInRepo(cell.targetPackage);
+        if (newPackage)
+            cell.targetPackage = newPackage;
         Package *package = cell.targetPackage;
         PackageQueueButton *button = [NSClassFromString(@"PackageQueueButton") new];
         button.package = package;
