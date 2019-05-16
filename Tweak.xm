@@ -31,6 +31,10 @@ Package *findPackageInRepo(Package *fpackage) {
     return nil;
 }
 
+NSString *localizedString(NSString *string) {
+    return [NSBundle.mainBundle localizedStringForKey:string value:@"" table:nil];
+}
+
 void didLongPressGesture(UILongPressGestureRecognizer *gesture, UIViewController <SileoPackageListViewControllerDelegate> *self) {
     if (gesture.state == UIGestureRecognizerStateChanged)
         return;
@@ -71,13 +75,16 @@ void didLongPressGesture(UILongPressGestureRecognizer *gesture, UIViewController
         package.commercial = NO;
         // BOOL installed = [[NSClassFromString(@"PackageListManager") sharedInstance] installedPackageWithIdentifier:package.package] != nil;
         for (UIPreviewAction *previewAction in button.previewActionItems) {
-            [actions _addActionWithTitle:previewAction.title style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            UIAlertActionStyle style = UIAlertActionStyleDefault;
+            if ([previewAction.title isEqualToString:localizedString(@"Package_Uninstall_Action")])
+                style = UIAlertActionStyleDestructive;
+            [actions _addActionWithTitle:previewAction.title style:style handler:^(UIAlertAction *action) {
                 if (previewAction.handler)
                     previewAction.handler(previewAction, actions);
             }];
         }
         if (package.allVersions.count > 1) {
-            [actions _addActionWithTitle:[NSBundle.mainBundle localizedStringForKey:@"Select Version" value:@"" table:nil] style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            [actions _addActionWithTitle:localizedString(@"Select Version") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                 BOOL commercial = package.commercial;
                 package.commercial = NO;
                 [button showDowngradePrompt:nil];
@@ -85,9 +92,7 @@ void didLongPressGesture(UILongPressGestureRecognizer *gesture, UIViewController
             }];
         }
         if (!IS_IPAD) {
-            [actions _addActionWithTitle:[NSBundle.mainBundle localizedStringForKey:@"Cancel" value:@"" table:nil] style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
-                [actions dismissViewControllerAnimated:YES completion:NULL];
-            }];
+            [actions _addActionWithTitle:localizedString(@"Cancel") style:UIAlertActionStyleCancel handler:NULL];
         }
         package.commercial = commercial;
         [button.viewControllerForPresentation presentViewController:actions animated:YES completion:NULL];   
@@ -158,15 +163,15 @@ NSString *keys[] = {
     int trueReturnButtonAction = MSHookIvar<int>(self, "_returnButtonAction");
     self.trueReturnButtonAction = trueReturnButtonAction;
     NSString *trueAction = nil;
-    if (trueReturnButtonAction > 1) {
-        NSString *key = keys[trueReturnButtonAction] ?: keys[trueReturnButtonAction - 1];
-        trueAction = [NSBundle.mainBundle localizedStringForKey:key value:@"" table:nil];
+    if (trueReturnButtonAction > 1 && trueReturnButtonAction < 6) {
+        NSString *key = keys[trueReturnButtonAction] ?: keys[trueReturnButtonAction + 1];
+        trueAction = localizedString(key);
         MSHookIvar<int>(self, "_returnButtonAction") = 0;
     }
     %orig;
     if (trueAction) {
         UIButton *completeButton = [self valueForKey:@"_completeButton"];
-        [completeButton setTitle:[NSString stringWithFormat:@"%@ (%@)", [NSBundle.mainBundle localizedStringForKey:keys[0] value:@"" table:nil], trueAction] forState:0];
+        [completeButton setTitle:[NSString stringWithFormat:@"%@ (%@)", localizedString(keys[0]), trueAction] forState:0];
     }
 }
 
