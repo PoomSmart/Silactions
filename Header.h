@@ -11,6 +11,7 @@
 @property(retain, nonatomic) NSString *section;
 @property(retain, nonatomic) NSString *version;
 @property(retain, nonatomic) NSString *sourceFile;
+@property(retain, nonatomic) NSURL *packageFileURL;
 @property(retain, nonatomic) NSMutableArray <Package *> *allVersions;
 @end
 
@@ -20,18 +21,19 @@
 @end
 
 @interface RepoManager : NSObject
-+ (instancetype)sharedInstance;
++ (instancetype)shared;
 - (NSMutableArray <Repo *> *)repoList;
 @end
 
 @interface PackageListManager : NSObject
-+ (instancetype)sharedInstance;
++ (instancetype)shared;
 - (void)loadAllPackages;
 - (Package *)installedPackageWithIdentifier:(NSString *)identifier;
+- (Package *)newestPackageWithIdentifier:(NSString *)identifier;
 @end
 
 @interface WishListManager : NSObject
-+ (instancetype)sharedInstance;
++ (instancetype)shared;
 - (BOOL)isPackageInWishList:(NSString *)package;
 @end
 
@@ -73,6 +75,7 @@
 - (void)showDowngradePrompt:(id)arg1;
 - (void)updatePurchaseStatus;
 - (void)setup;
+- (void)updateInfo;
 @end
 
 @interface InstallViewController : UIViewController

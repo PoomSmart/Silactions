@@ -9,8 +9,6 @@ void viewDidLoadHook(id self) {
     gesture.delaysTouchesBegan = YES;
     [[self collectionView] addGestureRecognizer:gesture];
     [gesture release];
-    [NSClassFromString(@"RepoManaager") sharedInstance];
-    [NSClassFromString(@"PackageListManager") sharedInstance];
 }
 
 BOOL shouldReceiveTouchHook(BOOL orig, UIGestureRecognizer *gesture) {
@@ -19,16 +17,8 @@ BOOL shouldReceiveTouchHook(BOOL orig, UIGestureRecognizer *gesture) {
     return orig;
 }
 
-Package *findPackageInRepo(Package *fpackage) {
-    NSString *fpackageString = [fpackage.package lowercaseString];
-    for (Repo *repo in [[NSClassFromString(@"RepoManager") sharedInstance] repoList]) {
-        for (Package *package in repo.packages) {
-            if ([fpackageString isEqualToString:[package.package lowercaseString]]) {
-                return package;
-            }
-        }
-    }
-    return nil;
+Package *findPackage(Package *fpackage) {
+    return [[NSClassFromString(@"Sileo.PackageListManager") shared] newestPackageWithIdentifier:fpackage.package];
 }
 
 NSString *localizedString(NSString *string) {
@@ -53,10 +43,7 @@ void didLongPressGesture(UILongPressGestureRecognizer *gesture, UIViewController
         [oldButton release];
         if (gesture.state != UIGestureRecognizerStateEnded)
             return;
-        Package *newPackage = findPackageInRepo(cell.targetPackage);
-        if (newPackage)
-            cell.targetPackage = newPackage;
-        Package *package = cell.targetPackage;
+        Package *package = findPackage(cell.targetPackage);
         PackageQueueButton *button = [NSClassFromString(@"PackageQueueButton") new];
         button.package = package;
         button.shouldCheckPurchaseStatus = NO;
